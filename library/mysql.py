@@ -1,5 +1,12 @@
 from ConfigParser import ConfigParser
 import os
+import MySQLdb
+
+
+def getMyVariables(cur):
+    cur.execute("show global variables;")
+    data = cur.fetchall()
+    return dict(data)
 
 class MySQLDConfig(ConfigParser):
     def __init__(self, config, **kw):
@@ -58,6 +65,10 @@ class MySQLDConfig(ConfigParser):
             self.set('mysqld', k, v)
         with open(self.config, 'w') as fd:
             self.write(fd)
+
+
+
+
 
 if __name__ == "__main__":
     mc = MySQLDConfig('/tmp/my3.cnf', max_connection=200, user='mysql2')
