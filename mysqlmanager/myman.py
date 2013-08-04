@@ -1,19 +1,20 @@
 #!/usr/bin/env python2.7
 #
 #
+
 import sys
 from os import path
 import os
+import MySQLdb
 DIRNAME = path.dirname(__file__)
 OPSTOOLS_DIR = path.abspath(path.join(DIRNAME, '..'))
 sys.path.append(OPSTOOLS_DIR)
 
-from library.mysql import MySQLDConfig
+from library.mysql import MySQLDConfig, getMyVariables
 from optparse import OptionParser
 
 MYSQL_DATA_DIR = "/var/mysqlmanager/data"
 MYSQL_CONF_DIR = "/var/mysqlmanager/cnfs"
-
 
 def opts():
     parser = OptionParser(usage="usage: %prog options")
@@ -61,6 +62,10 @@ def mysql_install_db(cnf):
 def setOwner(p, user):
     os.system("chown -R mysql:mysql %s" % p) 
 
+def getCNF(name):
+    return path.join(MYSQL_CONF_DIR, "%s.cnf" % name)
+
+
 def createInstance(name, port):
     cnf = path.join(MYSQL_CONF_DIR, "%s.cnf" % name)
     datadir = path.join(MYSQL_DATA_DIR, name)
@@ -78,6 +83,35 @@ def createInstance(name, port):
         mysql_install_db(cnf)
         setOwner(datadir, mc.mysqld_vars['user'])
 
+def connMySQLd(mc):
+     host = '127.0.0.1'
+     user = 'root'
+     port = int(mc.mysqld_vars['port'])
+     conn = MySQLdb.connect(host, port=port, user=user)
+     cur = conn.cursor()
+     return cur
+
+
+def diffVariables(instance_name):
+    cnf = getCNF(instance_name)
+    if path.exists(cnf):
+         mc = MySQLDConfig(cnf)
+         cur = connMySQLd(mc)
+         vars = getMyVariables(cur)
+         for k,v in mc.mysqld_vars.items():
+             k = k.replace('-','_')
+             if k in vars and vars[k] != v:
+                  print k, v, vars[k]
+
+def setVariable(instance_name, variable, value):
+    cnf = getCNF(instance_name)
+    if path.exists(cnf):
+         mc = MySQLDConfig(cnf)
+         cur = connMySQLd(mc)
+         cur.execute("set global %s = %s" % (variable, value))
+         mc.set_var(variable, value)
+         mc.save()
+
 def _init():
     if not path.exists(MYSQL_DATA_DIR):
         os.makedirs(MYSQL_DATA_DIR)
@@ -92,6 +126,12 @@ def main():
     command = opt.cmd
     if command == "create":
         createInstance(instance_name, instance_port)
+    elif command == "check":
+        diffVariables(instance_name)
+    elif command == "adjust":
+        variable = args[0]
+        value = args[1]
+        setVariable(instance_name, variable, value)
 
 if __name__ == '__main__':
     main()
