@@ -1,6 +1,5 @@
-$ORIGIN .
-$TTL 3600	; 1 hour
-example.net		IN SOA	ns.example.net. username.example.net. (
+$TTL 86400	; 1 day
+example.net.		IN SOA	ns.example.net. username.example.net. (
 				2013081023 ; serial
 				86400      ; refresh (1 day)
 				7200       ; retry (2 hours)
@@ -9,4 +8,5 @@ example.net		IN SOA	ns.example.net. username.example.net. (
 				)
 			NS	ns.example.net.
 			A	192.0.2.1
+ns A 192.168.1.1
 
