@@ -7,12 +7,12 @@ import dns.tsigkeyring
 key = "mQx7YHOWLzEDXy2HXwhAvM70wC1ks330ZQontYAXV5qv3TZxTH2QZBzOxJ/WtWpPgH7mkpRtABb7UNLg5+HpWw=="
 
 keyring = dns.tsigkeyring.from_text({
-    'example.net':'mQx7YHOWLzEDXy2HXwhAvM70wC1ks330ZQontYAXV5qv3TZxTH2QZBzOxJ/WtWpPgH7mkpRtABb7UNLg5+HpWw==',
+    'example.net':key
 })
 
 rr = [
     '192.168.1.135',
-    '192.168.1.1',
+    '192.168.1.136',
 ]
 
 up = dns.update.Update('example.net',keyring=keyring)
