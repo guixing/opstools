@@ -15,9 +15,15 @@ HOST_TMP="""define host {
     	contact_groups		admins
 }
 """
+HOSTGROUP_TMP="""define hostgroup{
+	hostgroup_name		%(hostgroup)s
+	alias			%(hostgroup)s
+	members			%(members)s
+}
+"""
 
 def getHosts():
-    url = "http://localhost:8000/api/gethosts.json"
+    url = "http://localhost:80/api/gethosts.json"
     try:
         data = urllib2.urlopen(url).read()
         writeFile(CACHE_FILE, data)
@@ -35,15 +41,23 @@ def writeFile(f,s):
 
 def genNagiosHost(hostdata):
     initDir()
-    conf = os.path.join(HOST_CONF_DIR,'hosts.cfg')
+    fp_hostconf = os.path.join(HOST_CONF_DIR,'hosts.cfg')
+    fp_hostgroupconf = os.path.join(HOST_CONF_DIR,'hostgroups.cfg')
     hostconf = ""
+    hostgroupconf = ""
     for hg in hostdata:
+        members = []
         for h in hg['members']:
             hostconf += HOST_TMP % h
-    writeFile(conf,hostconf)
+            members.append(h['hostname'])
+        print members
+        hostgroupconf += HOSTGROUP_TMP % {'hostgroup':hg['hostgroup'],'members':','.join(members)}
+    writeFile(fp_hostconf,hostconf)
+    writeFile(fp_hostgroupconf,hostgroupconf)
 
 def main():
     result = getHosts()
+    print result
     if result['status'] == 0:
         print genNagiosHost(result['data'])
     else:
